@@ -1,0 +1,123 @@
+switchtolayout;
+selectall;
+delete;
+
+
+h_disk = 220e-9;
+r_disk = 200e-9;
+fdtd_xy = 900 *1e-9;
+dx = 20 *1e-9;
+
+
+Si_max = 500 *1e-9;
+SiO2_max = 2500 *1e-9;
+source_z = 3920 *1e-9;
+monitor_R_z = 4420 *1e-9;
+fdtd_max = 5200 *1e-9;
+z_device_min = SiO2_max;           # 3500 нм
+z_device_max = SiO2_max + h_disk;  # 3720 нм
+
+
+
+mat_metasurface = 'Si (Silicon) - Palik';
+mat_air = 1;
+mat_sub1 = 'SiO2 (Glass) - Palik';
+mat_sub2 = mat_metasurface;
+wavelength = 1550 * 1e-9;
+wavelength_span = 0;
+
+
+# FDTD
+addfdtd;
+set('dimension','3D');
+set("index",1);
+set('x min',-fdtd_xy/2);
+set('x max',fdtd_xy/2);
+set('y min',-fdtd_xy/2);
+set('y max',fdtd_xy/2);
+set('z min',0);
+set('z max',fdtd_max);
+#set('mesh accuracy',2);
+set('mesh type','uniform');
+set('dx',dx);
+set('dy',dx);
+set('dz',dx);
+set('x min bc','Periodic');
+set('y min bc','Periodic');
+set('z min bc','PML');
+set('z max bc','PML');
+
+
+#Si SUBSTRATE
+addrect;
+set("name","silicon_sub");
+set("x",0);
+set("x span",fdtd_xy);
+set("y",0);
+set("y span",fdtd_xy);
+set("z min", 0);
+set("z max", Si_max);
+set("material",mat_sub2);
+
+
+#SiO2 SUBSTRATE
+addrect;
+set("name","glass_sub");
+set("x",0);
+set("x span",fdtd_xy);
+set("y",0);
+set("y span",fdtd_xy);
+set("z min", Si_max);
+set("z max", SiO2_max);
+set("material",mat_sub1);
+
+
+#
+# Добавить import объект
+#matlabload("device_nk.mat");
+
+#addimport;
+#set("name", "device_nk");
+#importnk2(n, x, y, z);
+#set("x",0);
+#set("y",0);
+#set("z min",SiO2_max);
+#set("z max",SiO2_max + h_disk);
+
+#stlimport("matrix_509_Device_Silicon.stl", 20*1e-9, 0, 0);
+#stlimport("matrix_510_Device_Silicon.stl", 20*1e-9, 0, 0);
+#stlimport("matrix_161_Device_Silicon.stl", 20*1e-9, 0, 0);
+stlimport("matrix_199_Device_Silicon (1).stl", 20*1e-9, 0, 0);
+
+set("name", "device");
+set("x",-fdtd_xy/2);
+set("y",-fdtd_xy/2);
+set("z", z_device_min);
+set("material", "Si (Silicon) - Palik");
+
+
+# SOURCE;
+addplane;
+set("name","source");
+set("injection axis","z");
+set("direction","backward");
+set("x",0);
+set("x span",fdtd_xy);
+set("y",0);
+set("y span",fdtd_xy);
+set("z",source_z);
+set("center wavelength", wavelength);
+set("wavelength span",wavelength_span);
+#set("override global source settings",false);  
+
+
+# R
+addpower;
+set('name','R');
+set('monitor type','2D Z-normal');
+set('x', 0);
+set('x span',2e-6);
+set('y', 0);
+set('y span',2e-6);
+set('z',monitor_R_z);
+
